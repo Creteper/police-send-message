@@ -1,0 +1,1912 @@
+{
+  "info": {
+    "_postman_id": "police-village-message-system",
+    "name": "警察-村长违章消息系统",
+    "description": "农用车违章信息处理系统 API 接口集合",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "policeToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "chiefToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "violationId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "messageId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "chiefId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "chiefUsername",
+      "value": "chief001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. 认证模块",
+      "item": [
+        {
+          "name": "1.1 警察登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"登录成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.token).to.be.a('string');",
+                  "    pm.expect(jsonData.data.user.role).to.eql('police');",
+                  "});",
+                  "",
+                  "// 保存token到环境变量",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"policeToken\", jsonData.data.token);",
+                  "    console.log(\"警察Token已保存\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"police001\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "警察账号登录，获取JWT Token"
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 村长登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"登录成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.token).to.be.a('string');",
+                  "    pm.expect(jsonData.data.user.role).to.eql('village_chief');",
+                  "});",
+                  "",
+                  "// 保存token到环境变量",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"chiefToken\", jsonData.data.token);",
+                  "    pm.collectionVariables.set(\"chiefId\", jsonData.data.user.id.toString());",
+                  "    console.log(\"村长Token已保存\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"chief001\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "村长账号登录，获取JWT Token"
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 登录失败-密码错误",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"返回错误信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "    pm.expect(jsonData.error).to.include('密码');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"police001\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "测试密码错误的情况"
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 获取当前用户信息(警察)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回用户信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.username).to.eql('police001');",
+                  "    pm.expect(jsonData.data.role).to.eql('police');",
+                  "    pm.expect(jsonData.data).to.not.have.property('password');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "获取当前登录用户信息"
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 更新个人信息",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"更新成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.message).to.include('成功');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"张警官\",\n  \"phone\": \"13800138001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "更新个人信息"
+          },
+          "response": []
+        },
+        {
+          "name": "1.6 未认证访问",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"返回未认证错误\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "测试未认证访问受保护接口"
+          },
+          "response": []
+        },
+        {
+          "name": "1.7 登出",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"登出成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "用户登出"
+          },
+          "response": []
+        }
+      ],
+      "description": "用户认证相关接口"
+    },
+    {
+      "name": "2. Mock数据",
+      "item": [
+        {
+          "name": "2.1 生成Mock违章数据",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"生成成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    pm.expect(jsonData.data.length).to.eql(5);",
+                  "});",
+                  "",
+                  "// 保存第一条违章ID",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set(\"violationId\", jsonData.data[0].id.toString());",
+                  "    console.log(\"违章ID已保存: \" + jsonData.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mock/violations/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["mock", "violations", "generate"]
+            },
+            "description": "批量生成Mock违章数据"
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 手动添加违章数据",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"创建成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.offenderName).to.eql('测试用户');",
+                  "    pm.expect(jsonData.data.status).to.eql('pending');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"violationTime\": \"2024-01-15T10:30:00.000Z\",\n  \"violationTag\": \"超载\",\n  \"imageUrl\": \"/uploads/test/violation_test.jpg\",\n  \"offenderName\": \"测试用户\",\n  \"offenderPhone\": \"13899998888\",\n  \"plateNumber\": \"黑AZ9999\",\n  \"ownerName\": \"测试车主\",\n  \"ownerPhone\": \"13888889999\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mock/violations",
+              "host": ["{{baseUrl}}"],
+              "path": ["mock", "violations"]
+            },
+            "description": "手动添加一条违章数据"
+          },
+          "response": []
+        }
+      ],
+      "description": "Mock数据生成接口"
+    },
+    {
+      "name": "3. 警察端",
+      "item": [
+        {
+          "name": "3.1 获取未处理违章列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "    pm.expect(jsonData.data).to.have.property('total');",
+                  "    pm.expect(jsonData.data).to.have.property('page');",
+                  "    pm.expect(jsonData.data).to.have.property('pageSize');",
+                  "    pm.expect(jsonData.data).to.have.property('totalPages');",
+                  "});",
+                  "",
+                  "pm.test(\"违章状态为pending\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.items.length > 0) {",
+                  "        jsonData.data.items.forEach(function(item) {",
+                  "            pm.expect(item.status).to.eql('pending');",
+                  "        });",
+                  "    }",
+                  "});",
+                  "",
+                  "// 保存第一条违章ID",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.items.length > 0) {",
+                  "    pm.collectionVariables.set(\"violationId\", jsonData.data.items[0].id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/violations/pending?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "violations", "pending"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取未处理的违章列表"
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 获取被退回的违章列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/violations/returned?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "violations", "returned"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取被退回的违章列表"
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 获取违章详情",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回违章详情\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('violationTag');",
+                  "    pm.expect(jsonData.data).to.have.property('offenderName');",
+                  "    pm.expect(jsonData.data).to.have.property('plateNumber');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/violations/{{violationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "violations", "{{violationId}}"]
+            },
+            "description": "获取指定违章的详细信息"
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 获取所有村庄列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回村庄列表\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"村庄包含村长信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        pm.expect(jsonData.data[0]).to.have.property('chiefs');",
+                  "    }",
+                  "});",
+                  "",
+                  "// 保存第一个村长ID和用户名",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.length > 0 && jsonData.data[0].chiefs.length > 0) {",
+                  "    var chief = jsonData.data[0].chiefs[0];",
+                  "    pm.collectionVariables.set(\"chiefId\", chief.id.toString());",
+                  "    pm.collectionVariables.set(\"chiefUsername\", chief.username);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/villages",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "villages"]
+            },
+            "description": "获取所有村庄及其村长信息"
+          },
+          "response": []
+        },
+        {
+          "name": "3.5 分发违章给村长",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"分发成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "    pm.expect(jsonData.message).to.include('成功分发');",
+                  "});",
+                  "",
+                  "pm.test(\"消息状态为unread\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        pm.expect(jsonData.data[0].status).to.eql('unread');",
+                  "    }",
+                  "});",
+                  "",
+                  "// 保存消息ID",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set(\"messageId\", jsonData.data[0].id.toString());",
+                  "    console.log(\"消息ID已保存: \" + jsonData.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"villageChiefIds\": [{{chiefId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/police/violations/{{violationId}}/dispatch",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "violations", "{{violationId}}", "dispatch"]
+            },
+            "description": "将违章分发给指定村长（支持多选）"
+          },
+          "response": []
+        },
+        {
+          "name": "3.6 获取未被查看的消息",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});",
+                  "",
+                  "pm.test(\"消息状态为unread\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.items.length > 0) {",
+                  "        jsonData.data.items.forEach(function(item) {",
+                  "            pm.expect(item.status).to.eql('unread');",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/messages/unread?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "messages", "unread"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取发送后未被村长查看的消息"
+          },
+          "response": []
+        },
+        {
+          "name": "3.7 获取超时消息",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/messages/timeout?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "messages", "timeout"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取超时未查看的消息"
+          },
+          "response": []
+        },
+        {
+          "name": "3.8 获取被退回的消息",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/messages/rejected?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "messages", "rejected"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取被村长退回的消息"
+          },
+          "response": []
+        },
+        {
+          "name": "3.9 获取消息详情",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回消息详情\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('violation');",
+                  "    pm.expect(jsonData.data).to.have.property('villageChief');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/messages/{{messageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "messages", "{{messageId}}"]
+            },
+            "description": "获取指定消息的详细信息"
+          },
+          "response": []
+        },
+        {
+          "name": "3.10 获取村长信息",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回村长信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('name');",
+                  "    pm.expect(jsonData.data).to.have.property('phone');",
+                  "    pm.expect(jsonData.data.role).to.eql('village_chief');",
+                  "    pm.expect(jsonData.data).to.not.have.property('password');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/village-chief/{{chiefId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "village-chief", "{{chiefId}}"]
+            },
+            "description": "获取指定村长的信息（含手机号）"
+          },
+          "response": []
+        },
+        {
+          "name": "3.11 获取历史记录-已完成",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/history?status=completed&page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "history"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "completed"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取已完成的历史记录"
+          },
+          "response": []
+        },
+        {
+          "name": "3.12 获取历史记录-未完成",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/history?status=uncompleted&page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "history"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "uncompleted"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取未完成的历史记录"
+          },
+          "response": []
+        },
+        {
+          "name": "3.13 权限测试-村长访问警察接口",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"返回无权限错误\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/violations/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "violations", "pending"]
+            },
+            "description": "测试村长访问警察端接口（应返回403）"
+          },
+          "response": []
+        }
+      ],
+      "description": "警察端相关接口"
+    },
+    {
+      "name": "4. 村长端",
+      "item": [
+        {
+          "name": "4.1 获取待处理消息列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "    pm.expect(jsonData.data).to.have.property('total');",
+                  "});",
+                  "",
+                  "// 保存第一条消息ID",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.items.length > 0) {",
+                  "    pm.collectionVariables.set(\"messageId\", jsonData.data.items[0].id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/pending?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "pending"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取待处理的消息列表"
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 获取消息详情(自动标记已读)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回消息详情\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('violation');",
+                  "    pm.expect(jsonData.data).to.have.property('police');",
+                  "});",
+                  "",
+                  "pm.test(\"消息已被标记为已读\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    // 状态应该是read或之前就是read",
+                  "    pm.expect(['read', 'unread', 'confirmed', 'rejected']).to.include(jsonData.data.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/{{messageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "{{messageId}}"]
+            },
+            "description": "获取消息详情，查看后自动标记为已读"
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 确认消息(是本村人)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"确认成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.status).to.eql('confirmed');",
+                  "    pm.expect(jsonData.data.isLocalResident).to.eql(true);",
+                  "    pm.expect(jsonData.message).to.include('本村人');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/{{messageId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "{{messageId}}", "confirm"]
+            },
+            "description": "确认违规人是本村人"
+          },
+          "response": []
+        },
+        {
+          "name": "4.4 退回消息(非本村人)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200或400\", function () {",
+                  "    // 可能是200成功，也可能是400因为状态不允许",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"返回正确响应\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(jsonData.success).to.eql(true);",
+                  "        pm.expect(jsonData.data.status).to.eql('rejected');",
+                  "        pm.expect(jsonData.data.isLocalResident).to.eql(false);",
+                  "    } else {",
+                  "        pm.expect(jsonData.success).to.eql(false);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/{{messageId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "{{messageId}}", "reject"]
+            },
+            "description": "退回消息，违规人非本村人"
+          },
+          "response": []
+        },
+        {
+          "name": "4.5 获取历史记录-已处理",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/history?status=processed&page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "history"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "processed"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取已处理的历史记录"
+          },
+          "response": []
+        },
+        {
+          "name": "4.6 获取历史记录-未处理",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回分页数据\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/history?status=unprocessed&page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "history"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "unprocessed"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取未处理的历史记录"
+          },
+          "response": []
+        },
+        {
+          "name": "4.7 获取警察信息",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"返回警察信息\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('name');",
+                  "    pm.expect(jsonData.data).to.have.property('phone');",
+                  "    pm.expect(jsonData.data).to.have.property('badgeNumber');",
+                  "    pm.expect(jsonData.data.role).to.eql('police');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/police-info?policeId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "police-info"],
+              "query": [
+                {
+                  "key": "policeId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "获取管辖警察信息"
+          },
+          "response": []
+        },
+        {
+          "name": "4.8 权限测试-警察访问村长接口",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"返回无权限错误\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "pending"]
+            },
+            "description": "测试警察访问村长端接口（应返回403）"
+          },
+          "response": []
+        }
+      ],
+      "description": "村长端相关接口"
+    },
+    {
+      "name": "5. 系统接口",
+      "item": [
+        {
+          "name": "5.1 健康检查",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"服务运行正常\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.message).to.include('正常');",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "服务健康检查"
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 404测试",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"状态码为404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"返回404错误\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/not-exist-path",
+              "host": ["{{baseUrl}}"],
+              "path": ["not-exist-path"]
+            },
+            "description": "测试访问不存在的路径"
+          },
+          "response": []
+        }
+      ],
+      "description": "系统相关接口"
+    },
+    {
+      "name": "6. 完整流程测试",
+      "item": [
+        {
+          "name": "流程1: 警察登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"policeToken\", jsonData.data.token);",
+                  "}",
+                  "",
+                  "pm.test(\"警察登录成功\", function () {",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"police001\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程2: 生成违章数据",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set(\"violationId\", jsonData.data[0].id.toString());",
+                  "}",
+                  "",
+                  "pm.test(\"生成违章数据成功\", function () {",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mock/violations/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["mock", "violations", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程3: 获取村庄列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.length > 0 && jsonData.data[0].chiefs.length > 0) {",
+                  "    var chief = jsonData.data[0].chiefs[0];",
+                  "    pm.collectionVariables.set(\"chiefId\", chief.id.toString());",
+                  "    pm.collectionVariables.set(\"chiefUsername\", chief.username);",
+                  "    console.log(\"村长ID: \" + chief.id + \", 用户名: \" + chief.username);",
+                  "}",
+                  "",
+                  "pm.test(\"获取村庄列表成功\", function () {",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/villages",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "villages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程4: 分发违章给村长",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.length > 0) {",
+                  "    pm.collectionVariables.set(\"messageId\", jsonData.data[0].id.toString());",
+                  "}",
+                  "",
+                  "pm.test(\"分发成功\", function () {",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"villageChiefIds\": [{{chiefId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/police/violations/{{violationId}}/dispatch",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "violations", "{{violationId}}", "dispatch"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程5: 村长登录",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// 使用流程3保存的村长用户名",
+                  "var chiefUsername = pm.collectionVariables.get(\"chiefUsername\") || \"chief001\";",
+                  "pm.variables.set(\"dynamicChiefUsername\", chiefUsername);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"chiefToken\", jsonData.data.token);",
+                  "}",
+                  "",
+                  "pm.test(\"村长登录成功\", function () {",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{chiefUsername}}\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程6: 村长查看待处理消息",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.items.length > 0) {",
+                  "    pm.collectionVariables.set(\"messageId\", jsonData.data.items[0].id.toString());",
+                  "}",
+                  "",
+                  "pm.test(\"获取待处理消息成功\", function () {",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "pending"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程7: 村长查看消息详情",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"查看消息详情成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data).to.have.property('violation');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/{{messageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "{{messageId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程8: 村长确认(是本村人)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"确认成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "    pm.expect(jsonData.data.status).to.eql('confirmed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chiefToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/village/messages/{{messageId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["village", "messages", "{{messageId}}", "confirm"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "流程9: 警察查看已完成记录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"获取历史记录成功\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{policeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/police/history?status=completed",
+              "host": ["{{baseUrl}}"],
+              "path": ["police", "history"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "completed"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "完整业务流程测试：警察分发违章 -> 村长确认"
+    }
+  ]
+}

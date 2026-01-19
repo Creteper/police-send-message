@@ -1,0 +1,12 @@
+.git
+node_modules
+dist
+uploads
+*.log
+.env
+.env.local
+.DS_Store
+coverage
+.nyc_output
+docker
+*.md

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: police-message-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=police_message_password
+      - DB_DATABASE=police_message
+      - JWT_SECRET=police_message_jwt_secret_production_key_2024
+      - JWT_EXPIRES_IN=7d
+      - UPLOAD_DIR=./uploads
+      - MAX_FILE_SIZE=10485760
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - police-message-network
+
+  db:
+    image: mysql:8.0
+    container_name: police-message-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=police_message_password
+      - MYSQL_DATABASE=police_message
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - police-message-network
+
+networks:
+  police-message-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
