@@ -4,13 +4,16 @@ WORKDIR /app
 
 # 安装依赖
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install
 
 # 复制源码
 COPY . .
 
 # 构建TypeScript
 RUN npm run build
+
+# 删除开发依赖，只保留生产依赖
+RUN npm prune --production
 
 # 创建上传目录
 RUN mkdir -p uploads
