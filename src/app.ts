@@ -11,7 +11,7 @@ import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middlew
 import { MessageService } from './services/message.service';
 import { seedInitialData } from './utils/seed';
 
-const app = express();
+const app: express.Application = express();
 
 // 中间件
 app.use(helmet());
@@ -21,6 +21,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // 静态文件服务（用于上传的图片）
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// 前端静态页面
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // API路由
 app.use('/api', routes);

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>消息管理系统 - 管理员</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    /* 登录页面 */
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-box h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #4a90d9;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #4a90d9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #3a7bc8;
+    }
+
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-msg {
+      color: #e74c3c;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    /* 管理页面 */
+    .admin-container {
+      display: none;
+    }
+
+    .header {
+      background: white;
+      padding: 16px 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      color: #333;
+    }
+
+    .header .user-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header .user-name {
+      color: #666;
+    }
+
+    .btn-logout {
+      padding: 8px 16px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-logout:hover {
+      background: #c0392b;
+    }
+
+    .main-content {
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* 筛选和操作栏 */
+    .toolbar {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .filter-group label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .filter-group select {
+      padding: 10px 16px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      min-width: 150px;
+    }
+
+    .batch-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-action {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-timeout {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-timeout:hover {
+      background: #c0392b;
+    }
+
+    .btn-cancel-timeout {
+      background: #27ae60;
+      color: white;
+    }
+
+    .btn-cancel-timeout:hover {
+      background: #219a52;
+    }
+
+    .btn-refresh {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-refresh:hover {
+      background: #2980b9;
+    }
+
+    /* 消息表格 */
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #555;
+      font-size: 14px;
+    }
+
+    td {
+      font-size: 14px;
+      color: #333;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .checkbox-cell {
+      width: 50px;
+      text-align: center;
+    }
+
+    .checkbox-cell input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* 状态标签 */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-unread {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-read {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .status-timeout {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status-confirmed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-rejected {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      gap: 8px;
+    }
+
+    .pagination button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #4a90d9;
+      color: white;
+      border-color: #4a90d9;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination .page-info {
+      color: #666;
+      margin: 0 16px;
+    }
+
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    /* Toast 消息 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast-success {
+      background: #27ae60;
+    }
+
+    .toast-error {
+      background: #e74c3c;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group, .batch-actions {
+        flex-wrap: wrap;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 800px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 登录页面 -->
+  <div id="loginPage" class="login-container">
+    <div class="login-box">
+      <h1>管理员登录</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">用户名</label>
+          <input type="text" id="username" placeholder="请输入用户名" required>
+        </div>
+        <div class="form-group">
+          <label for="password">密码</label>
+          <input type="password" id="password" placeholder="请输入密码" required>
+        </div>
+        <button type="submit" class="btn" id="loginBtn">登录</button>
+        <div id="loginError" class="error-msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理页面 -->
+  <div id="adminPage" class="admin-container">
+    <header class="header">
+      <h1>消息管理系统</h1>
+      <div class="user-info">
+        <span class="user-name" id="userName"></span>
+        <button class="btn-logout" onclick="logout()">退出登录</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- 工具栏 -->
+      <div class="toolbar">
+        <div class="filter-group">
+          <label>状态筛选:</label>
+          <select id="statusFilter" onchange="loadMessages()">
+            <option value="">全部状态</option>
+            <option value="unread">未读</option>
+            <option value="read">已读</option>
+            <option value="timeout">超时</option>
+            <option value="confirmed">已确认</option>
+            <option value="rejected">已退回</option>
+          </select>
+        </div>
+        <div class="batch-actions">
+          <button class="btn-action btn-timeout" onclick="batchSetTimeout(true)">批量设为超时</button>
+          <button class="btn-action btn-cancel-timeout" onclick="batchSetTimeout(false)">批量取消超时</button>
+          <button class="btn-action btn-refresh" onclick="loadMessages()">刷新</button>
+        </div>
+      </div>
+
+      <!-- 消息表格 -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="checkbox-cell">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+              </th>
+              <th>ID</th>
+              <th>违章信息</th>
+              <th>发送警察</th>
+              <th>接收村长</th>
+              <th>所属村庄</th>
+              <th>状态</th>
+              <th>发送时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="messageTableBody">
+            <tr>
+              <td colspan="9" class="loading">加载中...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <button id="prevBtn" onclick="changePage(-1)">上一页</button>
+        <span class="page-info" id="pageInfo">第 1 页 / 共 1 页</span>
+        <button id="nextBtn" onclick="changePage(1)">下一页</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 状态管理
+    let token = localStorage.getItem('adminToken');
+    let currentPage = 1;
+    let totalPages = 1;
+    let messages = [];
+    const pageSize = 10;
+
+    // 状态映射
+    const statusMap = {
+      unread: { label: '未读', class: 'status-unread' },
+      read: { label: '已读', class: 'status-read' },
+      timeout: { label: '超时', class: 'status-timeout' },
+      confirmed: { label: '已确认', class: 'status-confirmed' },
+      rejected: { label: '已退回', class: 'status-rejected' }
+    };
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      if (token) {
+        showAdminPage();
+        loadMessages();
+      }
+    });
+
+    // 登录
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const loginBtn = document.getElementById('loginBtn');
+      const errorEl = document.getElementById('loginError');
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = '登录中...';
+      errorEl.textContent = '';
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          if (data.data.user.role !== 'admin') {
+            errorEl.textContent = '只有管理员才能登录此系统';
+            return;
+          }
+          token = data.data.token;
+          localStorage.setItem('adminToken', token);
+          localStorage.setItem('adminUser', JSON.stringify(data.data.user));
+          showAdminPage();
+          loadMessages();
+        } else {
+          errorEl.textContent = data.error || '登录失败';
+        }
+      } catch (error) {
+        errorEl.textContent = '网络错误，请重试';
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '登录';
+      }
+    });
+
+    // 显示管理页面
+    function showAdminPage() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('adminPage').style.display = 'block';
+      const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+      document.getElementById('userName').textContent = `欢迎, ${user.name || '管理员'}`;
+    }
+
+    // 退出登录
+    function logout() {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      token = null;
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('adminPage').style.display = 'none';
+    }
+
+    // 加载消息列表
+    async function loadMessages() {
+      const tbody = document.getElementById('messageTableBody');
+      tbody.innerHTML = '<tr><td colspan="9" class="loading">加载中...</td></tr>';
+
+      const status = document.getElementById('statusFilter').value;
+      let url = `/api/admin/messages?page=${currentPage}&pageSize=${pageSize}`;
+      if (status) url += `&status=${status}`;
+
+      try {
+        const response = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          messages = data.data.items;
+          totalPages = data.data.totalPages;
+          renderMessages();
+          updatePagination();
+        } else {
+          if (response.status === 401) {
+            logout();
+            showToast('登录已过期，请重新登录', 'error');
+          } else {
+            tbody.innerHTML = `<tr><td colspan="9" class="empty">加载失败: ${data.error}</td></tr>`;
+          }
+        }
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">网络错误，请重试</td></tr>';
+      }
+    }
+
+    // 渲染消息列表
+    function renderMessages() {
+      const tbody = document.getElementById('messageTableBody');
+      
+      if (messages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无消息数据</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = messages.map(msg => {
+        const status = statusMap[msg.status] || { label: msg.status, class: '' };
+        const canSetTimeout = msg.status === 'unread' || msg.status === 'read';
+        const canCancelTimeout = msg.status === 'timeout';
+        
+        return `
+          <tr>
+            <td class="checkbox-cell">
+              <input type="checkbox" class="msg-checkbox" value="${msg.id}" 
+                ${!canSetTimeout && !canCancelTimeout ? 'disabled' : ''}>
+            </td>
+            <td>${msg.id}</td>
+            <td>${msg.violation?.plateNumber || '-'} - ${msg.violation?.vehicleType || ''}</td>
+            <td>${msg.police?.name || '-'}</td>
+            <td>${msg.villageChief?.name || '-'}</td>
+            <td>${msg.villageChief?.village?.name || '-'}</td>
+            <td><span class="status-badge ${status.class}">${status.label}</span></td>
+            <td>${formatDate(msg.sentAt)}</td>
+            <td>
+              ${canSetTimeout ? `<button class="btn-action btn-timeout" style="padding:6px 12px;font-size:12px" onclick="setMessageTimeout(${msg.id}, true)">设为超时</button>` : ''}
+              ${canCancelTimeout ? `<button class="btn-action btn-cancel-timeout" style="padding:6px 12px;font-size:12px" onclick="setMessageTimeout(${msg.id}, false)">取消超时</button>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // 更新分页信息
+    function updatePagination() {
+      document.getElementById('pageInfo').textContent = `第 ${currentPage} 页 / 共 ${totalPages || 1} 页`;
+      document.getElementById('prevBtn').disabled = currentPage <= 1;
+      document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+    }
+
+    // 翻页
+    function changePage(delta) {
+      currentPage += delta;
+      loadMessages();
+    }
+
+    // 全选/取消全选
+    function toggleSelectAll() {
+      const selectAll = document.getElementById('selectAll').checked;
+      document.querySelectorAll('.msg-checkbox:not(:disabled)').forEach(cb => {
+        cb.checked = selectAll;
+      });
+    }
+
+    // 获取选中的消息ID
+    function getSelectedIds() {
+      return Array.from(document.querySelectorAll('.msg-checkbox:checked'))
+        .map(cb => parseInt(cb.value));
+    }
+
+    // 设置单条消息超时状态
+    async function setMessageTimeout(messageId, isTimeout) {
+      try {
+        const response = await fetch(`/api/admin/messages/${messageId}/timeout`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ isTimeout })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(data.message || '操作成功', 'success');
+          loadMessages();
+        } else {
+          showToast(data.error || '操作失败', 'error');
+        }
+      } catch (error) {
+        showToast('网络错误，请重试', 'error');
+      }
+    }
+
+    // 批量设置超时状态
+    async function batchSetTimeout(isTimeout) {
+      const ids = getSelectedIds();
+      
+      if (ids.length === 0) {
+        showToast('请先选择消息', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/admin/messages/batch-timeout', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ messageIds: ids, isTimeout })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast(data.message || '操作成功', 'success');
+          document.getElementById('selectAll').checked = false;
+          loadMessages();
+        } else {
+          showToast(data.error || '操作失败', 'error');
+        }
+      } catch (error) {
+        showToast('网络错误，请重试', 'error');
+      }
+    }
+
+    // 显示 Toast 消息
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

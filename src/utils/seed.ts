@@ -71,7 +71,18 @@ export async function seedInitialData(): Promise<void> {
   await userRepository.save(policeUser);
   console.log('创建示例警察账号: police001 / 123456');
 
-  // 4. 为每个村庄创建一个村长账号
+  // 4. 创建管理员账号
+  const adminUser = userRepository.create({
+    username: 'admin',
+    password: hashedPassword,
+    name: '系统管理员',
+    phone: '13800138000',
+    role: UserRole.ADMIN,
+  });
+  await userRepository.save(adminUser);
+  console.log('创建管理员账号: admin / 123456');
+
+  // 5. 为每个村庄创建一个村长账号
   for (let i = 0; i < savedVillages.length; i++) {
     const village = savedVillages[i];
     const villageChief = userRepository.create({
