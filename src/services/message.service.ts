@@ -430,4 +430,102 @@ export class MessageService {
 
     return result.affected || 0;
   }
+
+  // ==================== 管理员功能 ====================
+
+  // 获取所有消息列表（管理员）
+  static async getAllMessages(
+    query: PaginationQuery & { status?: MessageStatus }
+  ): Promise<PaginatedResult<Message>> {
+    const page = query.page || 1;
+    const pageSize = query.pageSize || 10;
+    const skip = (page - 1) * pageSize;
+
+    const whereCondition: any = {};
+    if (query.status) {
+      whereCondition.status = query.status;
+    }
+
+    const [items, total] = await messageRepository().findAndCount({
+      where: whereCondition,
+      relations: ['violation', 'police', 'villageChief', 'villageChief.village'],
+      order: { createdAt: 'DESC' },
+      skip,
+      take: pageSize,
+    });
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  }
+
+  // 设置消息超时状态（管理员）
+  static async setMessageTimeout(
+    messageId: number,
+    isTimeout: boolean
+  ): Promise<Message> {
+    const message = await messageRepository().findOne({
+      where: { id: messageId },
+      relations: ['violation', 'police', 'villageChief'],
+    });
+
+    if (!message) {
+      throw new AppError('消息不存在', 404);
+    }
+
+    if (isTimeout) {
+      // 设置为超时状态
+      if (message.status !== MessageStatus.UNREAD && message.status !== MessageStatus.READ) {
+        throw new AppError('只有未读或已读状态的消息才能设置为超时', 400);
+      }
+      message.status = MessageStatus.TIMEOUT;
+    } else {
+      // 取消超时状态，恢复为未读
+      if (message.status !== MessageStatus.TIMEOUT) {
+        throw new AppError('该消息不是超时状态', 400);
+      }
+      message.status = MessageStatus.UNREAD;
+    }
+
+    await messageRepository().save(message);
+    return message;
+  }
+
+  // 批量设置消息超时状态（管理员）
+  static async batchSetMessageTimeout(
+    messageIds: number[],
+    isTimeout: boolean
+  ): Promise<{ success: number; failed: number }> {
+    let success = 0;
+    let failed = 0;
+
+    for (const id of messageIds) {
+      try {
+        await this.setMessageTimeout(id, isTimeout);
+        success++;
+      } catch {
+        failed++;
+      }
+    }
+
+    return { success, failed };
+  }
+
+  // 获取消息详情（管理员，不受权限限制）
+  static async getMessageDetailForAdmin(messageId: number): Promise<Message> {
+    const message = await messageRepository().findOne({
+      where: { id: messageId },
+      relations: ['violation', 'police', 'villageChief', 'villageChief.village'],
+    });
+
+    if (!message) {
+      throw new AppError('消息不存在', 404);
+    }
+
+    return message;
+  }
 }

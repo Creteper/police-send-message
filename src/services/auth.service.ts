@@ -34,8 +34,8 @@ export class AuthService {
     };
 
     const token = jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn,
-    });
+      expiresIn: config.jwt.expiresIn as string,
+    } as jwt.SignOptions);
 
     const { password: _, ...userWithoutPassword } = user;
 

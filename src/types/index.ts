@@ -1,6 +1,7 @@
 export enum UserRole {
   POLICE = 'police',
   VILLAGE_CHIEF = 'village_chief',
+  ADMIN = 'admin',
 }
 
 export enum ViolationStatus {

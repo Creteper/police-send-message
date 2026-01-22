@@ -13,7 +13,7 @@ export const AppDataSource = new DataSource({
   username: config.db.username,
   password: config.db.password,
   database: config.db.database,
-  synchronize: config.nodeEnv === 'development',
+  synchronize: true,  // 自动同步数据库表结构
   logging: config.nodeEnv === 'development',
   entities: [User, Village, Violation, Message, SystemConfig],
   migrations: [],

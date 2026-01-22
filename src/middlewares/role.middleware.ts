@@ -25,4 +25,5 @@ export const roleMiddleware = (...allowedRoles: UserRole[]) => {
 
 export const policeOnly = roleMiddleware(UserRole.POLICE);
 export const villageChiefOnly = roleMiddleware(UserRole.VILLAGE_CHIEF);
-export const anyRole = roleMiddleware(UserRole.POLICE, UserRole.VILLAGE_CHIEF);
+export const adminOnly = roleMiddleware(UserRole.ADMIN);
+export const anyRole = roleMiddleware(UserRole.POLICE, UserRole.VILLAGE_CHIEF, UserRole.ADMIN);

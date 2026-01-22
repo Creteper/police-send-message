@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { PoliceController } from '../controllers/police.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { policeOnly } from '../middlewares/role.middleware';
 
-const router = Router();
+const router: RouterType = Router();
 
 // 所有路由都需要认证和警察角色
 router.use(authMiddleware, policeOnly);

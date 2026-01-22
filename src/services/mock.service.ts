@@ -78,7 +78,7 @@ export class MockService {
       const violation = violationRepository().create({
         violationTime: randomDate(),
         violationTag: randomElement(VIOLATION_TAGS),
-        imageUrl: `/uploads/mock/violation_${Date.now()}_${i}.jpg`,
+        imageUrl: `https://picsum.photos/seed/${Date.now()}_${i}/800/600`,  // 随机图片
         offenderName,
         offenderPhone: randomPhone(),
         plateNumber: randomPlate(),
