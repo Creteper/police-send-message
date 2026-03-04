@@ -38,6 +38,9 @@ export class User {
   @Column({ type: 'varchar', length: 255, nullable: true })
   avatar: string | null;
 
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'wx_openid' })
+  wxOpenid: string | null;
+
   @Column({ type: 'int', nullable: true, name: 'village_id' })
   villageId: number | null;
 

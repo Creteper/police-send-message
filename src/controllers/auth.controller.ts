@@ -3,9 +3,9 @@ import { AuthService } from '../services/auth.service';
 import { asyncHandler } from '../middlewares/error.middleware';
 
 export class AuthController {
-  // 登录
+  // 登录（支持可选的微信绑定）
   static login = asyncHandler(async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+    const { username, password, code } = req.body;
 
     if (!username || !password) {
       res.status(400).json({
@@ -15,7 +15,8 @@ export class AuthController {
       return;
     }
 
-    const result = await AuthService.login(username, password);
+    // code 可选，如果提供则登录后自动绑定微信
+    const result = await AuthService.login(username, password, code);
 
     res.json({
       success: true,
@@ -75,6 +76,60 @@ export class AuthController {
     res.json({
       success: true,
       message: '登出成功',
+    });
+  });
+
+  // 微信小程序登录（村长端专用）
+  static wechatLogin = asyncHandler(async (req: Request, res: Response) => {
+    const { code } = req.body;
+
+    if (!code) {
+      res.status(400).json({
+        success: false,
+        error: '微信登录code不能为空',
+      });
+      return;
+    }
+
+    const result = await AuthService.wechatLogin(code);
+
+    res.json({
+      success: true,
+      data: result,
+      message: '登录成功',
+    });
+  });
+
+  // 绑定微信账号
+  static bindWechat = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const { code } = req.body;
+
+    if (!code) {
+      res.status(400).json({
+        success: false,
+        error: '微信登录code不能为空',
+      });
+      return;
+    }
+
+    await AuthService.bindWechat(userId, code);
+
+    res.json({
+      success: true,
+      message: '绑定成功',
+    });
+  });
+
+  // 解绑微信账号
+  static unbindWechat = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+
+    await AuthService.unbindWechat(userId);
+
+    res.json({
+      success: true,
+      message: '解绑成功',
     });
   });
 }

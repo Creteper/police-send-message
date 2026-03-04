@@ -66,7 +66,8 @@
 ```json
 {
   "username": "police001",
-  "password": "123456"
+  "password": "123456",
+  "code": "wx_login_code_here"
 }
 ```
 
@@ -74,6 +75,7 @@
 |------|------|------|------|
 | username | string | 是 | 用户名 |
 | password | string | 是 | 密码 |
+| code | string | 否 | 微信登录凭证，村长登录时提供则自动绑定微信 |
 
 **响应示例**:
 ```json
@@ -215,6 +217,112 @@
   "message": "登出成功"
 }
 ```
+
+---
+
+### 1.6 微信小程序登录（村长端专用）
+
+**接口地址**: `POST /api/auth/wechat/login`
+
+**请求参数**:
+```json
+{
+  "code": "wx_login_code_here"
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| code | string | 是 | 微信登录凭证，通过 wx.login 获取 |
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 2,
+      "username": "chief001",
+      "name": "龙镇村村长",
+      "phone": "13800138002",
+      "role": "village_chief",
+      "avatar": null,
+      "villageId": 1,
+      "village": {
+        "id": 1,
+        "name": "龙镇村",
+        "area": "五大连池市龙镇"
+      }
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  },
+  "message": "登录成功"
+}
+```
+
+**错误情况**:
+- 该微信未绑定村长账号：返回 401 错误
+
+**说明**:
+- 此接口仅限村长角色使用
+- 需要先通过账号密码登录后绑定微信才能使用
+- 微信小程序端调用 `wx.login()` 获取 code
+
+---
+
+### 1.7 绑定微信账号
+
+**接口地址**: `POST /api/auth/wechat/bind`
+
+**请求头**: 需要 Authorization（先通过账号密码登录）
+
+**请求参数**:
+```json
+{
+  "code": "wx_login_code_here"
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| code | string | 是 | 微信登录凭证，通过 wx.login 获取 |
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "绑定成功"
+}
+```
+
+**错误情况**:
+- 用户不存在或不是村长角色：返回 404 错误
+- 该微信已绑定其他账号：返回 400 错误
+
+**说明**:
+- 此接口仅限村长角色使用
+- 绑定后可使用微信小程序登录
+- 绑定后警察发送违章消息时，会自动发送微信订阅消息通知
+
+---
+
+### 1.8 解绑微信账号
+
+**接口地址**: `POST /api/auth/wechat/unbind`
+
+**请求头**: 需要 Authorization
+
+**响应示例**:
+```json
+{
+  "success": true,
+  "message": "解绑成功"
+}
+```
+
+**说明**:
+- 解绑后将无法使用微信小程序登录
+- 解绑后不再接收微信订阅消息
 
 ---
 

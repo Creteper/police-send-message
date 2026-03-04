@@ -23,4 +23,10 @@ export const config = {
     dir: process.env.UPLOAD_DIR || './uploads',
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10),
   },
+
+  wechat: {
+    appId: process.env.WECHAT_APP_ID || '',
+    appSecret: process.env.WECHAT_APP_SECRET || '',
+    templateId: process.env.WECHAT_TEMPLATE_ID || '',
+  },
 };

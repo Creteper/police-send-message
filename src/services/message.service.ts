@@ -13,6 +13,7 @@ import {
   PaginatedResult,
 } from '../types';
 import { AppError } from '../middlewares/error.middleware';
+import { WechatService } from './wechat.service';
 
 const messageRepository = () => AppDataSource.getRepository(Message);
 const violationRepository = () => AppDataSource.getRepository(Violation);
@@ -79,7 +80,36 @@ export class MessageService {
     violation.status = ViolationStatus.PROCESSING;
     await violationRepository().save(violation);
 
+    // 异步发送微信订阅消息给村长（不阻塞主流程）
+    this.sendWechatNotifications(villageChiefs, violation);
+
     return messages;
+  }
+
+  /**
+   * 发送微信订阅消息给村长
+   */
+  private static async sendWechatNotifications(
+    villageChiefs: User[],
+    violation: Violation
+  ): Promise<void> {
+    for (const chief of villageChiefs) {
+      if (chief.wxOpenid) {
+        try {
+          await WechatService.sendViolationNotification(
+            chief.wxOpenid,
+            {
+              senderName: `车牌${violation.plateNumber}`,
+              sendTime: violation.violationTime,
+              tips: `违章类型：${violation.violationTag}`,
+            },
+            'pages/index/index'
+          );
+        } catch (error) {
+          console.error(`发送订阅消息给村长 ${chief.name} 失败:`, error);
+        }
+      }
+    }
   }
 
   // 获取警察发送的未读消息
