@@ -2,6 +2,13 @@ import { Request, Response } from 'express';
 import { ViolationService } from '../services/violation.service';
 import { MessageService } from '../services/message.service';
 import { asyncHandler } from '../middlewares/error.middleware';
+import {
+  randomElement,
+  randomName,
+  randomPhone,
+  randomPlate,
+  VIOLATION_TAGS,
+} from '../services/mock.service';
 
 export class PoliceController {
   // 获取未处理的违章列表
@@ -197,4 +204,45 @@ export class PoliceController {
       data: message,
     });
   });
+
+  // 上传违章图片并创建违章记录
+  static uploadAndCreateViolation = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.file) {
+      res.status(400).json({
+        success: false,
+        error: '请上传违章图片',
+      });
+      return;
+    }
+
+    // 构建图片URL
+    const imageUrl = `/uploads/violations/${req.file.filename}`;
+
+    // 生成伪随机违规人员信息
+    const offenderName = randomName();
+    const ownerName = Math.random() > 0.5 ? offenderName : randomName();
+    const offenderPhone = randomPhone();
+    const ownerPhone = ownerName === offenderName ? offenderPhone : randomPhone();
+
+    // 如果请求体中包含信息则使用请求体中的（支持前端编辑后保存）
+    const violationData = {
+      violationTime: req.body.violationTime ? new Date(req.body.violationTime) : new Date(),
+      violationTag: req.body.violationTag || randomElement(VIOLATION_TAGS),
+      imageUrl,
+      offenderName: req.body.offenderName || offenderName,
+      offenderPhone: req.body.offenderPhone || offenderPhone,
+      plateNumber: req.body.plateNumber || randomPlate(),
+      ownerName: req.body.ownerName || ownerName,
+      ownerPhone: req.body.ownerPhone || ownerPhone,
+    };
+
+    const violation = await ViolationService.createViolation(violationData);
+
+    res.json({
+      success: true,
+      data: violation,
+      message: '违章记录创建成功',
+    });
+  });
 }
+
