@@ -5,7 +5,7 @@ import { ViolationStatus } from '../types';
 const violationRepository = () => AppDataSource.getRepository(Violation);
 
 // 违规标签列表
-const VIOLATION_TAGS = [
+export const VIOLATION_TAGS = [
   '超载',
   '无证驾驶',
   '酒驾',
@@ -30,23 +30,23 @@ const FIRST_NAMES = [
   '艳', '勇', '军', '杰', '娟', '涛', '明', '超', '秀兰', '霞',
 ];
 
-function randomElement<T>(arr: T[]): T {
+export function randomElement<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function randomPhone(): string {
+export function randomPhone(): string {
   const prefixes = ['138', '139', '150', '151', '152', '158', '159', '186', '187', '188'];
   const prefix = randomElement(prefixes);
   const suffix = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
   return prefix + suffix;
 }
 
-function randomPlate(): string {
+export function randomPlate(): string {
   const provinces = ['黑'];
   const cities = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R'];
   const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const numbers = '0123456789';
-  
+
   let plate = randomElement(provinces) + randomElement(cities);
   // 农用车格式
   plate += letters[Math.floor(Math.random() * letters.length)];
@@ -56,11 +56,11 @@ function randomPlate(): string {
   return plate;
 }
 
-function randomName(): string {
+export function randomName(): string {
   return randomElement(LAST_NAMES) + randomElement(FIRST_NAMES);
 }
 
-function randomDate(daysBack: number = 30): Date {
+export function randomDate(daysBack: number = 30): Date {
   const now = new Date();
   const pastDate = new Date(now.getTime() - Math.random() * daysBack * 24 * 60 * 60 * 1000);
   return pastDate;

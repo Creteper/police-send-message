@@ -2,6 +2,7 @@ import { Router, type Router as RouterType } from 'express';
 import { PoliceController } from '../controllers/police.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { policeOnly } from '../middlewares/role.middleware';
+import { uploadViolationImage } from '../middlewares/upload.middleware';
 
 const router: RouterType = Router();
 
@@ -11,6 +12,7 @@ router.use(authMiddleware, policeOnly);
 // 违章相关
 router.get('/violations/pending', PoliceController.getPendingViolations);
 router.get('/violations/returned', PoliceController.getReturnedViolations);
+router.post('/violations/upload', uploadViolationImage, PoliceController.uploadAndCreateViolation);
 router.get('/violations/:id', PoliceController.getViolationDetail);
 router.post('/violations/:id/dispatch', PoliceController.dispatchViolation);
 
