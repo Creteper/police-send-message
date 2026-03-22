@@ -108,4 +108,21 @@ export class ViolationService {
       totalPages: Math.ceil(total / pageSize),
     };
   }
+
+  static async deleteViolation(id: number): Promise<void> {
+    const violation = await violationRepository().findOne({
+      where: { id },
+    });
+
+    if (!violation) {
+      throw new AppError('违章信息不存在', 404);
+    }
+
+    // 只允许删除待处理状态的违章
+    if (violation.status !== ViolationStatus.PENDING) {
+      throw new AppError('只能删除待处理的违章信息', 400);
+    }
+
+    await violationRepository().remove(violation);
+  }
 }
