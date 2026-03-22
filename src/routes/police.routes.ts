@@ -15,6 +15,7 @@ router.get('/violations/returned', PoliceController.getReturnedViolations);
 router.post('/violations/upload', uploadViolationImage, PoliceController.uploadAndCreateViolation);
 router.get('/violations/:id', PoliceController.getViolationDetail);
 router.post('/violations/:id/dispatch', PoliceController.dispatchViolation);
+router.delete('/violations/:id', PoliceController.deleteViolation);
 
 // 消息相关
 router.get('/messages/unread', PoliceController.getUnreadMessages);

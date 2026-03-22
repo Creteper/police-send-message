@@ -244,5 +244,17 @@ export class PoliceController {
       message: '违章记录创建成功',
     });
   });
+
+  // 删除违章记录
+  static deleteViolation = asyncHandler(async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+
+    await ViolationService.deleteViolation(id);
+
+    res.json({
+      success: true,
+      message: '违章记录已删除',
+    });
+  });
 }
 
